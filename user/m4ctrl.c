@@ -241,6 +241,7 @@ static void m4_image_transfer(char *dst, const char * binary_name)
 static void  m4_core_deploy()
 {
 	m4_core_stop();
+	m4_core_pwroff();
 	m4_core_pwron();
 	m4_image_transfer(tcml, filename);
 	m4_core_start();
