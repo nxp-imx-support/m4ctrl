@@ -118,22 +118,22 @@ static void parse_cmds(int argc, char ** argv)
 			core_idx = atoi(optarg);
 			printf("core idx este %d \n", core_idx);
 			if (core_idx < 0 || core_idx > (M4_CORES_NUM - 1)) {
-				fprintf(stderr, "Invalid M4 core index.\n");
-				if ((M4_CORES_NUM - 1) == 0) {
-					 fprintf(stderr, "It shall be 0.\n");
-				}
-				else {
-					 fprintf(stderr, "It shall be between 0 and %d.\n", M4_CORES_NUM - 1);
-				}
-				exit(EXIT_FAILURE);
+			    fprintf(stderr, "Invalid M4 core index.\n");
+			    if ((M4_CORES_NUM - 1) == 0) {
+				fprintf(stderr, "It shall be 0.\n");
+			    }
+			    else {
+				fprintf(stderr, "It shall be between 0 and %d.\n", M4_CORES_NUM - 1);
+			    }
+			    exit(EXIT_FAILURE);
 			}
 
 			break;
 
 		    case 's':
 			if (stop) {
-			     fprintf(stderr, "It is not allowed to use simultaneously start and stop commands\n");
-			     exit(EXIT_FAILURE);
+			    fprintf(stderr, "It is not allowed to use simultaneously start and stop commands\n");
+			    exit(EXIT_FAILURE);
 			}
 
 			start = 1;
@@ -142,8 +142,8 @@ static void parse_cmds(int argc, char ** argv)
 
 		    case 'x':
 			if (start) {
-			     fprintf(stderr, "It is not allowed to use simultaneously start and stop commands\n");
-			     exit(EXIT_FAILURE);
+			    fprintf(stderr, "It is not allowed to use simultaneously start and stop commands\n");
+			    exit(EXIT_FAILURE);
 			}
 
 			stop = 1;
@@ -152,13 +152,13 @@ static void parse_cmds(int argc, char ** argv)
 
 		    case 'd':
 			if (start || stop) {
-				fprintf(stderr, "It is not allowed to use simultaneously start or stop commands together with deploy\n");
-				exit(EXIT_FAILURE);
+			    fprintf(stderr, "It is not allowed to use simultaneously start or stop commands together with deploy\n");
+			    exit(EXIT_FAILURE);
 			}
 
 			if (stat(optarg, &sb) < 0) {
-			     perror("Impossible to access the firmware file\n");
-			     exit(EXIT_FAILURE);
+			    perror("Impossible to access the firmware file\n");
+			    exit(EXIT_FAILURE);
 			}
 
 			deploy = 1;
@@ -268,10 +268,27 @@ static void execute_cmds()
 
 	close(fd);
 }
+static void cleanup()
+{
+	/* Close the file descriptor for m4ctrl device driver */
+	if (fd > 0)
+	    close(fd);
+	/* Unmap the memory */
+    if (munmap(tcml, core_idx ? TCML_RESERVED_SIZE_M1 : TCML_RESERVED_SIZE_M0) == -1) {
+        perror("failed to munmap tcml");
+        exit(EXIT_FAILURE);
+    }
+    if (close(fd_mem) == -1) {
+        perror("failed to close /dev/mem");
+        exit(EXIT_FAILURE);
+    }
+
+}
 int main(int argc, char **argv)
 {
 	parse_cmds(argc, argv);
 	platform_setup();
 	execute_cmds();
+	cleanup();
 	return 0;
 }
