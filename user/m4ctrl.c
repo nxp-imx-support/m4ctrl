@@ -46,11 +46,6 @@
 #include "../include/m4ctrl.h"
 
 #define DEVICE_PATH	"/dev/m4ctrl"
-#define M4_CORES_NUM	(2)
-#define TCML_ADDR_M0 0x34FE0000
-#define TCML_RESERVED_SIZE_M0 0x00040000
-#define TCML_ADDR_M1 0x38FE0000
-#define TCML_RESERVED_SIZE_M1 0x00040000
 
 /*
  * getopt structures
@@ -139,67 +134,66 @@ static void parse_cmds(int argc, char ** argv)
 
 		switch (c)
 		{
-		    case 'h':
-			usage(argv[0]);
-			exit(EXIT_SUCCESS);
-		    case 'c':
-			core_idx = atoi(optarg);
-			printf("core idx este %d \n", core_idx);
-			if (core_idx < 0 || core_idx > (M4_CORES_NUM - 1)) {
-			    fprintf(stderr, "Invalid M4 core index.\n");
-			    if ((M4_CORES_NUM - 1) == 0) {
-				fprintf(stderr, "It shall be 0.\n");
-			    }
-			    else {
-				fprintf(stderr, "It shall be between 0 and %d.\n", M4_CORES_NUM - 1);
-			    }
-			    exit(EXIT_FAILURE);
+			case 'h':
+				usage(argv[0]);
+				exit(EXIT_SUCCESS);
+			case 'c':
+				core_idx = atoi(optarg);
+				if (core_idx < 0 || core_idx > (M4_CORES_NUM - 1)) {
+					fprintf(stderr, "Invalid M4 core index.\n");
+					if ((M4_CORES_NUM - 1) == 0) {
+						fprintf(stderr, "It shall be 0.\n");
+					}
+					else {
+						fprintf(stderr, "It shall be between 0 and %d.\n", M4_CORES_NUM - 1);
+					}
+					exit(EXIT_FAILURE);
 			}
 
-			break;
+				break;
 
-		    case 's':
-			if (stop) {
-			    fprintf(stderr, "It is not allowed to use simultaneously start and stop commands\n");
-			    exit(EXIT_FAILURE);
-			}
+			case 's':
+				if (stop) {
+					fprintf(stderr, "It is not allowed to use simultaneously start and stop commands\n");
+					exit(EXIT_FAILURE);
+				}
 
-			start = 1;
+				start = 1;
 
-			break;
+				break;
 
-		    case 'x':
-			if (start) {
-			    fprintf(stderr, "It is not allowed to use simultaneously start and stop commands\n");
-			    exit(EXIT_FAILURE);
-			}
+			case 'x':
+				if (start) {
+					fprintf(stderr, "It is not allowed to use simultaneously start and stop commands\n");
+					exit(EXIT_FAILURE);
+				}
 
-			stop = 1;
+				stop = 1;
 
-			break;
+				break;
 
-		    case 'd':
-			if (start || stop) {
-			    fprintf(stderr, "It is not allowed to use simultaneously start or stop commands together with deploy\n");
-			    exit(EXIT_FAILURE);
-			}
+			case 'd':
+				if (start || stop) {
+					fprintf(stderr, "It is not allowed to use simultaneously start or stop commands together with deploy\n");
+					exit(EXIT_FAILURE);
+				}
 
-			if (stat(optarg, &sb) < 0) {
-			    perror("Impossible to access the firmware file\n");
-			    exit(EXIT_FAILURE);
-			}
+				if (stat(optarg, &sb) < 0) {
+					perror("Impossible to access the firmware file\n");
+					exit(EXIT_FAILURE);
+				}
 
-			deploy = 1;
-			filename = strdup(optarg);
+				deploy = 1;
+				filename = strdup(optarg);
 
-			break;
+				break;
 
-		    case '?':
-			/* getopt_long already printed an error message. */
-			break;
+			case '?':
+				/* getopt_long already printed an error message. */
+				break;
 
-		    default:
-			abort ();
+			default:
+				abort ();
 		}
 	};
 }
