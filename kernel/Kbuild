@@ -1,0 +1,3 @@
+EXTRA_CFLAGS = -Wall -g
+
+obj-m = m4ctrl_dev.o
