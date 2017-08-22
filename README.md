@@ -40,15 +40,11 @@ be reserved from Linux dtb in order to be excluded from the memory used by linux
 
 2. hello_world app for M4 was used for testing.
 
-1. Create the device node
-
-mknod /dev/m4ctrl c 42 0
-
-2. Insert the kernel module 
+1. Insert the kernel module
 
 insmod m4ctrl_dev.ko
 
-3. Run the app:
+2. Run the app:
 Examples:
 
 root@imx8qmlpddr4arm2:~# ./m4ctrl --deploy=./m4_image_c0.bin --core=0
