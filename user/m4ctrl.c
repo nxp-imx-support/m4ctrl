@@ -55,7 +55,9 @@
 static struct option long_options[] =
 {
     {"help", no_argument,       0, 'h'},
+#if M4_CORES_NUM > 1
     {"core", required_argument, 0, 'c'},
+#endif
     {"start",  no_argument,       0, 's'},
     {"stop",   no_argument, 0, 'x'},
     {"deploy", required_argument, 0, 'd'},
@@ -68,7 +70,11 @@ static struct option long_options[] =
 static void usage(const char *argv0)
 {
 	fprintf(stdout, "M4 Control Tool\n"
-	       "Usage: %s <options> [--core=<n>] \n options:\n"
+	       "Usage: %s <options> "
+#if M4_CORES_NUM > 1
+	       "[--core=<n>]"
+#endif
+	       "\n options:\n"
 		"\t --help - display the list of supported commands\n"
 		"\t --start - start the specified M4 core\n"
 		"\t --stop - stop the specified M4 core\n"
@@ -76,6 +82,21 @@ static void usage(const char *argv0)
 	       argv0);
 	exit(EXIT_FAILURE);
 }
+
+m4_data m4[M4_CORES_NUM] = {
+        {
+         TCML_ADDR_M0, TCML_RESERVED_SIZE_M0,
+         M4CTRL_START_CORE_M0, M4CTRL_STOP_CORE_M0,
+         M4CTRL_PWRON_CORE_M0, M4CTRL_PWROFF_CORE_M0
+        },
+#if defined(IMX8QM)
+        {
+          TCML_ADDR_M1, TCML_RESERVED_SIZE_M1,
+          M4CTRL_START_CORE_M1, M4CTRL_STOP_CORE_M1,
+          M4CTRL_PWRON_CORE_M1, M4CTRL_PWROFF_CORE_M1
+        },
+#endif /* defined(IMX8QM) */
+};
 
 static int core_idx = 0, start = 0, stop = 0, deploy = 0;
 static char * filename = NULL;
@@ -98,10 +119,10 @@ static void platform_setup()
 	}
 
 	tcml = (void *) mmap(NULL,
-				 core_idx ? TCML_RESERVED_SIZE_M1 : TCML_RESERVED_SIZE_M0,
+				 m4[core_idx].size,
 				 PROT_READ | PROT_WRITE,
 				 MAP_SHARED, fd_mem,
-				 core_idx ? TCML_ADDR_M1 : TCML_ADDR_M0
+				 m4[core_idx].addr
 				);
 	if ((void *) tcml == MAP_FAILED)
 	{
@@ -137,6 +158,7 @@ static void parse_cmds(int argc, char ** argv)
 			case 'h':
 				usage(argv[0]);
 				exit(EXIT_SUCCESS);
+#if M4_CORES_NUM > 1
 			case 'c':
 				core_idx = atoi(optarg);
 				if (core_idx < 0 || core_idx > (M4_CORES_NUM - 1)) {
@@ -148,7 +170,8 @@ static void parse_cmds(int argc, char ** argv)
 						fprintf(stderr, "It shall be between 0 and %d.\n", M4_CORES_NUM - 1);
 					}
 					exit(EXIT_FAILURE);
-			}
+				}
+#endif
 
 				break;
 
@@ -199,7 +222,7 @@ static void parse_cmds(int argc, char ** argv)
 }
 static void  m4_core_start()
 {
-    int cmd = core_idx ? M4CTRL_START_CORE_M1 : M4CTRL_START_CORE_M0;
+    int cmd = m4[core_idx].start_cmd;
     if (ioctl(fd, cmd, 0) < 0) {
 	perror("ioctl");
 	exit(EXIT_FAILURE);
@@ -208,7 +231,7 @@ static void  m4_core_start()
 }
 static void m4_core_stop()
 {
-    int cmd = core_idx ? M4CTRL_STOP_CORE_M1 : M4CTRL_STOP_CORE_M0;
+    int cmd = m4[core_idx].stop_cmd;
     if (ioctl(fd, cmd, 0) < 0) {
 	perror("ioctl");
 	exit(EXIT_FAILURE);
@@ -218,7 +241,7 @@ static void m4_core_stop()
 }
 static void  m4_core_pwroff()
 {
-    int cmd = core_idx ? M4CTRL_PWROFF_CORE_M1 : M4CTRL_PWROFF_CORE_M0;
+    int cmd = m4[core_idx].pwroff_cmd;
     if (ioctl(fd, cmd, 0) < 0) {
 	perror("ioctl");
 	exit(EXIT_FAILURE);
@@ -227,7 +250,7 @@ static void  m4_core_pwroff()
 }
 static void m4_core_pwron()
 {
-    int cmd = core_idx ? M4CTRL_PWRON_CORE_M1 : M4CTRL_PWRON_CORE_M0;
+    int cmd = m4[core_idx].pwron_cmd;
     if (ioctl(fd, cmd, 0) < 0) {
 	perror("ioctl");
 	exit(EXIT_FAILURE);
@@ -296,7 +319,7 @@ static void cleanup()
 	if (fd > 0)
 	    close(fd);
 	/* Unmap the memory */
-    if (munmap(tcml, core_idx ? TCML_RESERVED_SIZE_M1 : TCML_RESERVED_SIZE_M0) == -1) {
+    if (munmap(tcml, m4[core_idx].size) == -1) {
         perror("failed to munmap tcml");
         exit(EXIT_FAILURE);
     }

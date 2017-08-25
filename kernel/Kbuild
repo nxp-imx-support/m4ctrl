@@ -1,3 +1,4 @@
-EXTRA_CFLAGS = -Wall -g
+EXTRA_CFLAGS += -Wall -g -D$(SOC)
 
-obj-m = m4ctrl_dev.o
+ccflags-y += -I$(PWD)/../include/platform
+obj-m := m4ctrl_dev.o
