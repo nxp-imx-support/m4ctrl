@@ -11,4 +11,9 @@
 
 #endif
 
+#if !defined(__KERNEL__)
+void platform_setup();
+void cleanup();
+#endif
+
 #endif

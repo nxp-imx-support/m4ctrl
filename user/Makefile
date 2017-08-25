@@ -7,6 +7,10 @@ INCLUDES := -I../include -I../include/platform
 
 TARGET := m4ctrl
 
+ifeq (IMX8, $(shell echo $(SOC) | cut -c1-4))
+SOURCES += platform/imx8.c
+endif
+
 
 SOURCES += $(wildcard *.c)
 OBJECTS := $(patsubst %.c,%.o,$(SOURCES))
@@ -16,4 +20,5 @@ $(TARGET): $(OBJECTS)
 %.o: %.c
 	$(CC) -D$(SOC) -c $< -o $@
 clean:
-	-rm -f *~ *.o m4ctrl
+	find . -name *.o | xargs rm -f
+	-rm -f *~ m4ctrl
