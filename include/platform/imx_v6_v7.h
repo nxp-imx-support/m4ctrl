@@ -37,10 +37,10 @@
 
 #if !defined(__KERNEL__)
 typedef struct {
-	/* start address of the memory reserved for M4 cortex */
-	uint32_t addr;
-	/* size of the memory reserved for M4 cortex */
-	uint32_t size;
+	/* start address of the reset control register for M4 cortex */
+	uint32_t src_addr;
+	/* size of the reset control register for M4 cortex */
+	uint32_t src_size;
 	/* start address of the TCML memory */
 	uint32_t tcml_addr;
 	/* start address of the OCRAMS memory */
