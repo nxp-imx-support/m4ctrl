@@ -105,6 +105,11 @@ void cleanup()
 	}
 }
 
+void m4_start()
+{}
+void m4_stop()
+{}
+
 static void m4_platform_reset(void)
 {
 	*m4rcr |= 1 << M4PR_BIT;
