@@ -1,6 +1,5 @@
 #include "../../include/m4ctrl.h"
 
-static int fd;
 extern int fd_mem;
 static uint32_t *src;
 static uint32_t *m4rcr;
