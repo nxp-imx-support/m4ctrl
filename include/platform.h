@@ -5,6 +5,10 @@
 
 #include "platform/imx8.h"
 
+#elif defined(IMX6SX) || defined(IMX7D) || defined(IMX7S)
+
+#include "platform/imx_v6_v7.h"
+
 #else
 
 #error "Platform undefined!"

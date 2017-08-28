@@ -11,6 +11,14 @@ ifeq (IMX8, $(shell echo $(SOC) | cut -c1-4))
 SOURCES += platform/imx8.c
 endif
 
+ifeq (IMX6, $(shell echo $(SOC) | cut -c1-4))
+SOURCES += platform/imx_v6_v7.c
+endif
+
+ifeq (IMX7, $(shell echo $(SOC) | cut -c1-4))
+SOURCES += platform/imx_v6_v7.c
+endif
+
 
 SOURCES += $(wildcard *.c)
 OBJECTS := $(patsubst %.c,%.o,$(SOURCES))
