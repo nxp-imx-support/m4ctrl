@@ -48,6 +48,7 @@ static struct option long_options[] =
     {"start",  no_argument,       0, 's'},
     {"stop",   no_argument, 0, 'x'},
     {"deploy", required_argument, 0, 'd'},
+    {"version", no_argument, 0, 'v'},
     {0, 0, 0, 0}
 };
 
@@ -65,7 +66,8 @@ static void usage(const char *argv0)
 		"\t --help - display the list of supported commands\n"
 		"\t --start - start the specified M4 core\n"
 		"\t --stop - stop the specified M4 core\n"
-		"\t --deploy=<firmware_file> - deploy firmware_file on the specified M4 core\n",
+		"\t --deploy=<firmware_file> - deploy firmware_file on the specified M4 core\n"
+		"\t --version - show the version\n",
 	       argv0);
 	exit(EXIT_FAILURE);
 }
@@ -163,12 +165,17 @@ static void parse_cmds(int argc, char ** argv)
 
 				break;
 
+			case 'v':
+				 fprintf(stdout, M4CTRL_VERSION "\n");
+				 exit(EXIT_SUCCESS);
+
 			case '?':
 				/* getopt_long already printed an error message. */
 				break;
 
 			default:
-				abort ();
+				fprintf(stderr, "Unknown option: %s\n", argv[optind]);
+				exit(EXIT_FAILURE);
 		}
 	};
 }
@@ -187,6 +194,7 @@ static void execute_cmds()
 		m4_stop();
 	}
 
+	/* Deploy the firmware on the specified M4 core */
 	if (deploy)
 	{
 		m4_deploy(filename);

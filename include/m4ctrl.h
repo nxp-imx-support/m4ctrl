@@ -25,6 +25,18 @@
 void m4_start();
 void m4_stop();
 void m4_deploy( char * filename );
+
+/* Versioning Convention:
+ * 0.1.<release_number> - Alpha Version
+ * 0.2.<release_number> - Beta Version
+ * 1.0.<release_number> - Release Version
+ *
+ * Release candidates:
+ * 0.1.<release_number>_rc<build_number> - Alpha Version
+ * 0.2.<release_number>_rc<build_number> - Beta Version
+ * 1.0.<release_number>_rc<build_number> - Release Version
+ */
+#define M4CTRL_VERSION "mctrl rev. 0.1.0_rc1"
 #endif
 
 #endif
