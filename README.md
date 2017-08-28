@@ -6,7 +6,7 @@ M4 Control Tool for i.MX platforms
 deploy a new firmware for M4 into OCRAM. Depending on the used platform, the application can
 be only user space or to have light part in kernel space and one in user space.
 	
-Supported platforms: i.mx8qm
+Supported platforms: i.mx8qm and i.mx8qxp
 
 2. Build Instructions
 
@@ -19,6 +19,7 @@ export KDIR=/work/platforms/imx/yocto/imx8/bld-x11/tmp/work/imx8qmlpddr4arm2-pok
 export ARCH=arm64
 # Path to the used cross-compiler
 export CROSS_COMPILE=/home/disk2b/toolchain/gcc-linaro-aarch64-linux-gnu-4.9-2014.09_linux/aarch64-linux-gnu-
+export SOC=<IMX8QXP/IMX8QM>
 
 # Compile the kernel module
 
@@ -45,7 +46,7 @@ be reserved from Linux dtb in order to be excluded from the memory used by linux
 insmod m4ctrl_dev.ko
 
 2. Run the app:
-Examples:
+Examples - i.mx8QM
 
 root@imx8qmlpddr4arm2:~# ./m4ctrl --deploy=./m4_image_c0.bin --core=0
 

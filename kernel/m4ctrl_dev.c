@@ -77,21 +77,33 @@ m4ctrl_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 				return -EIO;
 			break;
 
-		case M4CTRL_PWRON_CORE_M1:
-			printk(LOG_LEVEL "%s\n", "pwron core 1\n");
-			if (sc_pm_set_resource_power_mode(ipc_handle, SC_R_M4_1_PID0, SC_PM_PW_MODE_ON) != SC_ERR_NONE)
-				return -EIO;
-
-			if (sc_pm_set_resource_power_mode(ipc_handle, SC_R_M4_1_MU_1A, SC_PM_PW_MODE_ON) != SC_ERR_NONE)
-				return -EIO;
-			break;
-
 		case M4CTRL_PWROFF_CORE_M0:
 			printk(LOG_LEVEL "pwroff the core M0\n");
 			if (sc_pm_set_resource_power_mode(ipc_handle, SC_R_M4_0_PID0, SC_PM_PW_MODE_OFF) != SC_ERR_NONE)
 				return -EIO;
 
 			if (sc_pm_set_resource_power_mode(ipc_handle, SC_R_M4_0_MU_1A, SC_PM_PW_MODE_OFF) != SC_ERR_NONE)
+				return -EIO;
+			break;
+
+		case M4CTRL_START_CORE_M0:
+			printk(LOG_LEVEL "%s\n", "start core 0\n");
+			printk(LOG_LEVEL "starting the core\n");
+			sc_pm_cpu_start(ipc_handle, SC_R_M4_0_PID0, true,  TCML_ADDR_M0);
+			printk(LOG_LEVEL "%s\n", "finish the operation\n");
+			break;
+
+		case M4CTRL_STOP_CORE_M0:
+			printk(LOG_LEVEL "stoping the core M0\n");
+			sc_pm_cpu_start(ipc_handle, SC_R_M4_0_PID0, false, TCML_ADDR_M0);
+			break;
+#if M4_CORES_NUM > 1
+		case M4CTRL_PWRON_CORE_M1:
+			printk(LOG_LEVEL "%s\n", "pwron core 1\n");
+			if (sc_pm_set_resource_power_mode(ipc_handle, SC_R_M4_1_PID0, SC_PM_PW_MODE_ON) != SC_ERR_NONE)
+				return -EIO;
+
+			if (sc_pm_set_resource_power_mode(ipc_handle, SC_R_M4_1_MU_1A, SC_PM_PW_MODE_ON) != SC_ERR_NONE)
 				return -EIO;
 			break;
 
@@ -103,13 +115,6 @@ m4ctrl_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			if (sc_pm_set_resource_power_mode(ipc_handle, SC_R_M4_1_MU_1A, SC_PM_PW_MODE_OFF) != SC_ERR_NONE)
 				return -EIO;
 
-		case M4CTRL_START_CORE_M0:
-			printk(LOG_LEVEL "%s\n", "start core 0\n");
-			printk(LOG_LEVEL "starting the core\n");
-			sc_pm_cpu_start(ipc_handle, SC_R_M4_0_PID0, true,  TCML_ADDR_M0);
-			printk(LOG_LEVEL "%s\n", "finish the operation\n");
-			break;
-
 		case M4CTRL_START_CORE_M1:
 			printk(LOG_LEVEL "%s\n", "start core 1\n");
 			sc_pm_cpu_start(ipc_handle, SC_R_M4_1_PID0, true,  TCML_ADDR_M1);
@@ -117,15 +122,11 @@ m4ctrl_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			printk(LOG_LEVEL "starting the core\n");
 			break;
 
-		case M4CTRL_STOP_CORE_M0:
-			printk(LOG_LEVEL "stoping the core M0\n");
-			sc_pm_cpu_start(ipc_handle, SC_R_M4_0_PID0, false, TCML_ADDR_M0);
-			break;
-
 		case M4CTRL_STOP_CORE_M1:
 			printk(LOG_LEVEL "%s\n", "stop core 1\n");
 			sc_pm_cpu_start(ipc_handle, SC_R_M4_1_PID0, false, TCML_ADDR_M1);
 			break;
+#endif
 
 		default:
 			ret = -EINVAL;

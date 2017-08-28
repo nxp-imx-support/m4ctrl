@@ -31,22 +31,9 @@
  * User-space tool for M4 control
  */
 
-#include <fcntl.h>
-#include <getopt.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <fcntl.h>
 #include "../include/m4ctrl.h"
 
-#define DEVICE_PATH	"/dev/m4ctrl"
-
+static char * filename = NULL;
 /*
  * getopt structures
  */
@@ -55,7 +42,9 @@
 static struct option long_options[] =
 {
     {"help", no_argument,       0, 'h'},
+#if M4_CORES_NUM > 1
     {"core", required_argument, 0, 'c'},
+#endif
     {"start",  no_argument,       0, 's'},
     {"stop",   no_argument, 0, 'x'},
     {"deploy", required_argument, 0, 'd'},
@@ -68,7 +57,11 @@ static struct option long_options[] =
 static void usage(const char *argv0)
 {
 	fprintf(stdout, "M4 Control Tool\n"
-	       "Usage: %s <options> [--core=<n>] \n options:\n"
+			"Usage: %s <options> "
+#if M4_CORES_NUM > 1
+			"[--core=<n>]"
+#endif
+	"\n options:\n"
 		"\t --help - display the list of supported commands\n"
 		"\t --start - start the specified M4 core\n"
 		"\t --stop - stop the specified M4 core\n"
@@ -77,39 +70,19 @@ static void usage(const char *argv0)
 	exit(EXIT_FAILURE);
 }
 
-static int core_idx = 0, start = 0, stop = 0, deploy = 0;
-static char * filename = NULL;
-static int fd, fd_mem;
-static char * tcml = NULL;
-static void platform_setup()
+static int start = 0, stop = 0, deploy = 0;
+int core_id, fd_mem;
+
+static m4ctrl_setup()
 {
-
-	fd = open(DEVICE_PATH, O_RDONLY);
-	if (fd < 0) {
-		perror("Error during opening the m4ctrl kernel device \n");
-		exit(EXIT_FAILURE);
-	}
-
 	fd_mem = open("/dev/mem", O_RDWR | O_SYNC);
-
 	if (fd_mem < 0) {
 		perror("failed to open /dev/mem \n");
 		exit(EXIT_FAILURE);
 	}
 
-	tcml = (void *) mmap(NULL,
-				 core_idx ? TCML_RESERVED_SIZE_M1 : TCML_RESERVED_SIZE_M0,
-				 PROT_READ | PROT_WRITE,
-				 MAP_SHARED, fd_mem,
-				 core_idx ? TCML_ADDR_M1 : TCML_ADDR_M0
-				);
-	if ((void *) tcml == MAP_FAILED)
-	{
-	    perror("failed to mmap tcml");
-	    exit(EXIT_FAILURE);
-	}
-
 }
+
 static void parse_cmds(int argc, char ** argv)
 {
 	int c;
@@ -137,9 +110,10 @@ static void parse_cmds(int argc, char ** argv)
 			case 'h':
 				usage(argv[0]);
 				exit(EXIT_SUCCESS);
+#if M4_CORES_NUM > 1
 			case 'c':
-				core_idx = atoi(optarg);
-				if (core_idx < 0 || core_idx > (M4_CORES_NUM - 1)) {
+				core_id = atoi(optarg);
+				if (core_id < 0 || core_id > (M4_CORES_NUM - 1)) {
 					fprintf(stderr, "Invalid M4 core index.\n");
 					if ((M4_CORES_NUM - 1) == 0) {
 						fprintf(stderr, "It shall be 0.\n");
@@ -148,7 +122,8 @@ static void parse_cmds(int argc, char ** argv)
 						fprintf(stderr, "It shall be between 0 and %d.\n", M4_CORES_NUM - 1);
 					}
 					exit(EXIT_FAILURE);
-			}
+				}
+#endif
 
 				break;
 
@@ -197,118 +172,31 @@ static void parse_cmds(int argc, char ** argv)
 		}
 	};
 }
-static void  m4_core_start()
-{
-    int cmd = core_idx ? M4CTRL_START_CORE_M1 : M4CTRL_START_CORE_M0;
-    if (ioctl(fd, cmd, 0) < 0) {
-	perror("ioctl");
-	exit(EXIT_FAILURE);
-	printf("Start cortex M4, core %d\n", core_idx);
-    }
-}
-static void m4_core_stop()
-{
-    int cmd = core_idx ? M4CTRL_STOP_CORE_M1 : M4CTRL_STOP_CORE_M0;
-    if (ioctl(fd, cmd, 0) < 0) {
-	perror("ioctl");
-	exit(EXIT_FAILURE);
-    }
-
-    printf("Stop cortex M4, core %d\n", core_idx);
-}
-static void  m4_core_pwroff()
-{
-    int cmd = core_idx ? M4CTRL_PWROFF_CORE_M1 : M4CTRL_PWROFF_CORE_M0;
-    if (ioctl(fd, cmd, 0) < 0) {
-	perror("ioctl");
-	exit(EXIT_FAILURE);
-	printf("Poweroff cortex M4, core %d\n", core_idx);
-    }
-}
-static void m4_core_pwron()
-{
-    int cmd = core_idx ? M4CTRL_PWRON_CORE_M1 : M4CTRL_PWRON_CORE_M0;
-    if (ioctl(fd, cmd, 0) < 0) {
-	perror("ioctl");
-	exit(EXIT_FAILURE);
-    }
-
-    printf("Poweron cortex M4, core %d\n", core_idx);
-}
-
-static void m4_image_transfer(char *dst, const char * binary_name)
-{
-    int fw_fd;
-    char block;
-
-    if ((fw_fd = open(binary_name, O_RDONLY)) < 0) {
-	perror("failed to open firmware image\n");
-	exit(EXIT_FAILURE);
-    }
-
-    sync();
-
-    while (read(fw_fd, &block, sizeof(block)) ==sizeof(block))
-    {
-	*dst++ = block;
-	/* workaround for caching bug from imx8qm*/
-	*(dst-1);
-    }
-
-    sync();
-
-    close(fw_fd);
-}
-
-static void  m4_core_deploy()
-{
-	m4_core_stop();
-	m4_core_pwroff();
-	m4_core_pwron();
-	m4_image_transfer(tcml, filename);
-	m4_core_start();
-}
 
 static void execute_cmds()
 {
 	/* Start the specified M4 core */
 	if (start)
 	{
-		m4_core_start();
+		m4_start();
 	}
 
 	/* Stop the specified M4 core */
 	if (stop)
 	{
-		m4_core_stop();
+		m4_stop();
 	}
 
 	if (deploy)
 	{
-		m4_core_deploy();
+		m4_deploy(filename);
 	}
-
-	close(fd);
 }
-static void cleanup()
-{
-	/* Close the file descriptor for m4ctrl device driver */
-	if (fd > 0)
-	    close(fd);
-	/* Unmap the memory */
-    if (munmap(tcml, core_idx ? TCML_RESERVED_SIZE_M1 : TCML_RESERVED_SIZE_M0) == -1) {
-        perror("failed to munmap tcml");
-        exit(EXIT_FAILURE);
-    }
-    if (close(fd_mem) == -1) {
-        perror("failed to close /dev/mem");
-        exit(EXIT_FAILURE);
-    }
 
-}
 int main(int argc, char **argv)
 {
 	parse_cmds(argc, argv);
+	m4ctrl_setup();
 	platform_setup();
 	execute_cmds();
 	cleanup();
