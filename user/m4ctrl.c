@@ -73,7 +73,7 @@ static void usage(const char *argv0)
 static int start = 0, stop = 0, deploy = 0;
 int core_id, fd_mem;
 
-static m4ctrl_setup()
+static void m4ctrl_setup()
 {
 	fd_mem = open("/dev/mem", O_RDWR | O_SYNC);
 	if (fd_mem < 0) {
