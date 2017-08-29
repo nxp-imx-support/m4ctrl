@@ -18,6 +18,9 @@
 #if !defined(__KERNEL__)
 void platform_setup();
 void cleanup();
+void map_memory(m4_data * m4);
+void unmap_memory(m4_data * m4);
+void alignment_check(m4_data * m4);
 #endif
 
 #endif

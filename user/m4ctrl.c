@@ -80,15 +80,62 @@ static void usage(const char *argv0)
 static int start = 0, stop = 0, deploy = 0, reset = 0;
 int core_id = 0, fd_mem;
 
-static void m4ctrl_setup()
+void alignment_check(m4_data * m4)
 {
-	fd_mem = open("/dev/mem", O_RDWR | O_SYNC);
-	if (fd_mem < 0) {
-		perror("failed to open /dev/mem \n");
+	long page_size;
+	int i;
+
+	if ((page_size = sysconf(_SC_PAGESIZE)) == -1) {
+		perror("failed to get page size");
 		exit(EXIT_FAILURE);
 	}
 
+	for( i = 0; i < MEM_AREAS; i++ ) {
+		if ((m4->areas[i].paddr % page_size) != 0) {
+			fprintf(stderr, "internal error: Address is not page aligned \n");
+			exit(EXIT_FAILURE);
+		}
+	}
 }
+
+void map_memory(m4_data * m4)
+{
+	int i;
+
+	if ((fd_mem = open("/dev/mem", O_RDWR | O_SYNC)) == -1) {
+		perror("failed to open /dev/mem");
+		exit(EXIT_FAILURE);
+	}
+
+	for( i = 0; i < MEM_AREAS; i++ ) {
+		m4->areas[i].vaddr = mmap(NULL, m4->areas[i].size,
+			PROT_READ | PROT_WRITE,
+			MAP_SHARED, fd_mem, m4->areas[i].paddr);
+
+		if ((void *) m4->areas[i].vaddr == MAP_FAILED) {
+			fprintf(stderr, "failed to mmap \n");
+			exit(EXIT_FAILURE);
+		}
+	}
+}
+
+void unmap_memory(m4_data * m4)
+{
+	int i;
+
+	for( i = 0; i < MEM_AREAS; i++ ) {
+		if (munmap(m4->areas[i].vaddr, m4->areas[i].size) == -1) {
+			perror("failed to munmap");
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	if (close(fd_mem) == -1) {
+		perror("failed to close /dev/mem");
+		exit(EXIT_FAILURE);
+	}
+}
+
 
 static void parse_cmds(int argc, char ** argv)
 {
@@ -222,7 +269,6 @@ static void execute_cmds()
 int main(int argc, char **argv)
 {
 	parse_cmds(argc, argv);
-	m4ctrl_setup();
 	platform_setup();
 	execute_cmds();
 	cleanup();
