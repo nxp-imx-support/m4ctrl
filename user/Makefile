@@ -1,6 +1,7 @@
 SOC ?= IMX8QM
 family := $(shell echo $(SOC) | cut -c1-4)
-CFLAGS += -Wall -g -D$(SOC)
+LCFLAGS := -Wall -g -D$(SOC)
+CCFLAGS := $(CFLAGS) $(LCFLAGS)
 CROSS_COMPILE ?=aarch64-linux-gnu-
 CC ?= $(CROSS_COMPILE)gcc
 INCLUDES := -I../include -I../include/platform
@@ -24,7 +25,7 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CC) $^ -o $@
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CCFLAGS) -c $< -o $@
 clean:
-	find . -name *.o | xargs rm -f
+	find . -name "*.o" -delete
 	-rm -f *~ m4ctrl

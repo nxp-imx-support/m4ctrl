@@ -45,9 +45,13 @@ static struct option long_options[] =
 #if M4_CORES_NUM > 1
     {"core", required_argument, 0, 'c'},
 #endif
+#if !defined(IMX6SX) || !defined(IMX7D) || !defined(IMX7S)
     {"start",  no_argument,       0, 's'},
     {"stop",   no_argument, 0, 'x'},
+#endif
+    {"reset", no_argument, 0, 'r'},
     {"deploy", required_argument, 0, 'd'},
+    {"version", no_argument, 0, 'v'},
     {0, 0, 0, 0}
 };
 
@@ -63,15 +67,18 @@ static void usage(const char *argv0)
 #endif
 	"\n options:\n"
 		"\t --help - display the list of supported commands\n"
+#if !defined(IMX6SX) || !defined(IMX7D) || !defined(IMX7S)
 		"\t --start - start the specified M4 core\n"
 		"\t --stop - stop the specified M4 core\n"
-		"\t --deploy=<firmware_file> - deploy firmware_file on the specified M4 core\n",
+#endif
+		"\t --deploy=<firmware_file> - deploy firmware_file on the specified M4 core\n"
+		"\t --version - show the version\n",
 	       argv0);
 	exit(EXIT_FAILURE);
 }
 
-static int start = 0, stop = 0, deploy = 0;
-int core_id, fd_mem;
+static int start = 0, stop = 0, deploy = 0, reset = 0;
+int core_id = 0, fd_mem;
 
 static void m4ctrl_setup()
 {
@@ -98,7 +105,7 @@ static void parse_cmds(int argc, char ** argv)
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
 
-		c = getopt_long(argc, argv, "c:h::sxd:",
+		c = getopt_long(argc, argv, "c:h::sxdrv:",
 				long_options, &option_index);
 
 		/* Detect the end of the options. */
@@ -163,12 +170,19 @@ static void parse_cmds(int argc, char ** argv)
 
 				break;
 
+			case 'v':
+				 fprintf(stdout, M4CTRL_VERSION "\n");
+				 exit(EXIT_SUCCESS);
+			case 'r':
+				 reset = 1;
+				 break;
 			case '?':
 				/* getopt_long already printed an error message. */
 				break;
 
 			default:
-				abort ();
+				fprintf(stderr, "Unknown option: %s\n", argv[optind]);
+				exit(EXIT_FAILURE);
 		}
 	};
 }
@@ -187,6 +201,18 @@ static void execute_cmds()
 		m4_stop();
 	}
 
+	/* Restart the specified M4 core */
+	if (reset)
+	{
+	    if(stop || start || deploy) {
+		fprintf(stderr, "--reset option is incompatible with --start | --stop | --deploy");
+		exit(EXIT_FAILURE);
+	    }
+	    else {
+		m4_reset();
+	    }
+	}
+	/* Deploy the firmware on the specified M4 core */
 	if (deploy)
 	{
 		m4_deploy(filename);

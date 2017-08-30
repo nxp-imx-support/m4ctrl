@@ -85,6 +85,12 @@ void m4_stop()
 
     printf("Stop cortex M4, core %d\n", core_id);
 }
+void m4_reset()
+{
+    m4_stop();
+    m4_start();
+}
+
 static void  m4_pwroff()
 {
     int cmd = m4[core_id].pwroff_cmd;

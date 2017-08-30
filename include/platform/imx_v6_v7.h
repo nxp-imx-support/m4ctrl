@@ -23,7 +23,7 @@
 /*position of the core reset bit on SRC_SCR register*/
 #define M4CR_BIT    1
 
-#elif
+#else
 
 #error platform unknown
 
