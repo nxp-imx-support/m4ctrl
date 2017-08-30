@@ -24,6 +24,7 @@
 /* M4 Control API */
 void m4_start();
 void m4_stop();
+void m4_reset();
 void m4_deploy( char * filename );
 
 /* Versioning Convention:

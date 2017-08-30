@@ -26,5 +26,5 @@ $(TARGET): $(OBJECTS)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 clean:
-	find . -name *.o | xargs rm -f
+	find . -name "*.o" -delete
 	-rm -f *~ m4ctrl

@@ -114,7 +114,7 @@ static void m4_platform_reset(void)
 	*m4rcr |= 1 << M4PR_BIT;
 }
 
-static void m4_core_reset(void)
+void m4_reset(void)
 {
 	*m4rcr |= 1 << M4CR_BIT;
 }
@@ -151,5 +151,5 @@ void  m4_deploy(char *filename)
 {
 	m4_platform_reset();
 	m4_image_transfer(tcml, filename);
-	m4_core_reset();
+	m4_reset();
 }
