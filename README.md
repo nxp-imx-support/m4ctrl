@@ -21,15 +21,7 @@ export ARCH=arm64
 export CROSS_COMPILE=/home/disk2b/toolchain/gcc-linaro-aarch64-linux-gnu-4.9-2014.09_linux/aarch64-linux-gnu-
 export SOC=<IMX8QXP/IMX8QM>
 
-# Compile the kernel module
-
-# change directory to kernel
-cd kernel
-# compile the module m4ctrl_dev.ko
-make
-
-# Compile the user space application
-cd ../user
+# Build the application and kernel module
 make
 
 For i.mx6 and i.mx7, it is needed to build only the user space application.
@@ -41,8 +33,7 @@ For i.mx6 and i.mx7, it is needed to build only the user space application.
 # Export SOC variable for the desired platform
 export SOC=<IMX6SX/IMX7D/IMX7S>
 
-# Compile the user space application
-cd ./user
+# Build the application
 make
 
 3. Run instructions
@@ -76,11 +67,20 @@ root@imx8qmlpddr4arm2:~# ./m4ctrl --start --core=1
 
 # Instructions for i.mx6 and i.mx7 platforms
 Note:
-	1. This application assumes that the M4 apps are compiled for OCRAM
+	1. This application assumes that the M4 apps are compiled for OCRAM and the cortex M4 is started from uboot.
 
 	2. hello_world app for M4 was used for testing.
 
 3.1 Run the app:
 Examples: - i.mx6sx
 
+# U-boot shell
+=> run m4boot
+
+# Linux shell
 root@imx6sxsabresd:~# ./m4ctrl --deploy=hello_world.bin
+
+# Known limitations:
+1. cortex M4 should be started from u-boot on imx6 and imx7 platforms
+2. Due to known hardware TLB issue, it is likely that the application will not always
+work on IMX8QM
