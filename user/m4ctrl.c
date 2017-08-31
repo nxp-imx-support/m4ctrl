@@ -45,7 +45,7 @@ static struct option long_options[] =
 #if M4_CORES_NUM > 1
     {"core", required_argument, 0, 'c'},
 #endif
-#if !defined(IMX6SX) || !defined(IMX7D) || !defined(IMX7S)
+#if defined(IMX8QM) || defined(IMX8QXP)
     {"start",  no_argument,       0, 's'},
     {"stop",   no_argument, 0, 'x'},
 #endif
@@ -67,10 +67,11 @@ static void usage(const char *argv0)
 #endif
 	"\n options:\n"
 		"\t --help - display the list of supported commands\n"
-#if !defined(IMX6SX) || !defined(IMX7D) || !defined(IMX7S)
+#if defined(IMX8QM) || defined(IMX8QXP)
 		"\t --start - start the specified M4 core\n"
 		"\t --stop - stop the specified M4 core\n"
 #endif
+        "\t --reset - reset the specified M4 core\n"
 		"\t --deploy=<firmware_file> - deploy firmware_file on the specified M4 core\n"
 		"\t --version - show the version\n",
 	       argv0);

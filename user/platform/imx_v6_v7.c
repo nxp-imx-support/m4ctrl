@@ -77,6 +77,6 @@ static void m4_image_transfer(uint32_t *dst, const char * binary_name)
 void  m4_deploy(char *filename)
 {
 	m4_platform_reset();
-	m4_image_transfer(tcml, filename);
+	m4_image_transfer(m4[core_id].areas[TCML_IDX].vaddr, filename);
 	m4_reset();
 }
