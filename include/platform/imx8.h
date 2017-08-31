@@ -10,17 +10,28 @@
 #endif /* defined(IMX8QM) */
 
 #if !defined(__KERNEL__)
+
+#define MEM_AREAS	(1)
+#define TCML_IDX	(0)
+
 typedef struct {
-	/* start address of the memory reserved for M4 cortex */
-	uint64_t addr;
-	/* size of the memory reserved for M4 cortex */
+	/* physical start address of the mapped memory */
+	uint64_t paddr;
+	/* virtual start address of the mapped memory */
+	uint32_t * vaddr;
+	/* size of the mapped memory */
 	uint32_t size;
+} mem;
+
+typedef struct {
+	mem areas[MEM_AREAS];
 	/* ioctl commands */
 	int start_cmd;
 	int stop_cmd;
 	int pwron_cmd;
 	int pwroff_cmd;
 } m4_data;
+
 #endif /* !defined(__KERNEL__) */
 
 #if defined(IMX8QM)

@@ -3,23 +3,29 @@
 #define DEVICE_PATH	"/dev/m4ctrl"
 
 static int fd;
-extern int fd_mem;
-static char * tcml = NULL;
 
 /* This variable is initialised in m4ctrl.c */
 extern int core_id;
 
 m4_data m4[M4_CORES_NUM] = {
-        {
-         TCML_ADDR_M0, TCML_RESERVED_SIZE_M0,
-         M4CTRL_START_CORE_M0, M4CTRL_STOP_CORE_M0,
-         M4CTRL_PWRON_CORE_M0, M4CTRL_PWROFF_CORE_M0
+	{
+		.areas = {
+			{ TCML_ADDR_M0, 0, TCML_RESERVED_SIZE_M0 },
+		},
+		.start_cmd = M4CTRL_START_CORE_M0,
+		.stop_cmd = M4CTRL_STOP_CORE_M0,
+		.pwron_cmd = M4CTRL_PWRON_CORE_M0,
+		.pwroff_cmd = M4CTRL_PWROFF_CORE_M0
         },
 #if defined(IMX8QM)
         {
-          TCML_ADDR_M1, TCML_RESERVED_SIZE_M1,
-          M4CTRL_START_CORE_M1, M4CTRL_STOP_CORE_M1,
-          M4CTRL_PWRON_CORE_M1, M4CTRL_PWROFF_CORE_M1
+	    .areas = {
+		{ TCML_ADDR_M1, 0, TCML_RESERVED_SIZE_M1 },
+	    },
+		.start_cmd = M4CTRL_START_CORE_M1,
+		.stop_cmd = M4CTRL_STOP_CORE_M1,
+		.pwron_cmd = M4CTRL_PWRON_CORE_M1,
+		.pwroff_cmd = M4CTRL_PWROFF_CORE_M1
         },
 #endif /* defined(IMX8QM) */
 };
@@ -33,17 +39,8 @@ void platform_setup()
 		exit(EXIT_FAILURE);
 	}
 
-	tcml = (void *) mmap(NULL,
-				 m4[core_id].size,
-				 PROT_READ | PROT_WRITE,
-				 MAP_SHARED, fd_mem,
-				 m4[core_id].addr
-				);
-	if ((void *) tcml == MAP_FAILED)
-	{
-	    perror("failed to mmap tcml");
-	    exit(EXIT_FAILURE);
-	}
+	alignment_check(&m4[core_id]);
+	map_memory(&m4[core_id]);
 
 }
 
@@ -53,17 +50,7 @@ void cleanup()
 	if (fd > 0)
 		close(fd);
 
-	/* Unmap the memory */
-	if (munmap(tcml, m4[core_id].size) == -1) {
-		perror("failed to munmap tcml");
-		exit(EXIT_FAILURE);
-	}
-
-	if (close(fd_mem) == -1) {
-		perror("failed to close /dev/mem");
-		exit(EXIT_FAILURE);
-	}
-
+	unmap_memory(&m4[core_id]);
 }
 
 void  m4_start()
@@ -111,36 +98,36 @@ static void m4_pwron()
     printf("Poweron cortex M4, core %d\n", core_id);
 }
 
-static void m4_image_transfer(char *dst, const char * binary_name)
+static void m4_image_transfer(uint32_t *dst, const char * binary_name)
 {
-    int fw_fd;
-    char block;
+	int fw_fd;
+	uint32_t block;
 
-    if ((fw_fd = open(binary_name, O_RDONLY)) < 0) {
-        perror("failed to open firmware image\n");
-        exit(EXIT_FAILURE);
-    }
+	if ((fw_fd = open(binary_name, O_RDONLY)) < 0) {
+		perror("failed to open firmware image\n");
+		exit(EXIT_FAILURE);
+	}
 
-    sync();
+	sync();
 
-    while (read(fw_fd, &block, sizeof(block)) ==sizeof(block))
-    {
-        *dst++ = block;
-        /* workaround for caching bug from imx8qm*/
-        *(dst-1);
-    }
+	while (read(fw_fd, &block, sizeof(block)) == sizeof(block))
+	{
+		*dst = block;
+		dst = dst + 1;
+	}
 
-    sync();
+	sync();
 
-    close(fw_fd);
+	close(fw_fd);
 }
 
 void  m4_deploy(char *filename)
 {
-        m4_stop();
-        m4_pwroff();
-        m4_pwron();
-        m4_image_transfer(tcml, filename);
-        m4_start();
+	m4_stop();
+	m4_pwroff();
+	m4_pwron();
+	m4_image_transfer(m4[core_id].areas[TCML_IDX].vaddr, filename);
+	m4_start();
+
 }
 
