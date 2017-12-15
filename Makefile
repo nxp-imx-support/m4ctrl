@@ -1,6 +1,6 @@
 SOC ?= IMX8QM
 CROSS_COMPILE ?= aarch64-linux-gnu-
-CC ?= $(CROSS_COMPILE)gcc
+CC := $(CROSS_COMPILE)gcc
 armv7_socs := IMX6SX IMX7S IMX7D
 armv8_socs := IMX8QM IMX8QXP
 supported_socs := $(armv7_socs) $(armv8_socs)

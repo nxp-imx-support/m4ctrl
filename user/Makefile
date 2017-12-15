@@ -3,7 +3,7 @@ family := $(shell echo $(SOC) | cut -c1-4)
 LCFLAGS := -Wall -g -D$(SOC)
 CCFLAGS := $(CFLAGS) $(LCFLAGS)
 CROSS_COMPILE ?=aarch64-linux-gnu-
-CC ?= $(CROSS_COMPILE)gcc
+CC := $(CROSS_COMPILE)gcc
 INCLUDES := -I../include -I../include/platform
 .PHONY: all clean
 
