@@ -1,6 +1,15 @@
+#
+# Copyright 2017 NXP
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+
 SOC ?= IMX8QM
 CROSS_COMPILE ?= aarch64-linux-gnu-
-CC ?= $(CROSS_COMPILE)gcc
+CC := $(CROSS_COMPILE)gcc
 armv7_socs := IMX6SX IMX7S IMX7D
 armv8_socs := IMX8QM IMX8QXP
 supported_socs := $(armv7_socs) $(armv8_socs)
